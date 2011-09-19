@@ -69,6 +69,13 @@ object Logging {
     var facility = "local0"
   }
 
+  class JmxConfig {
+    /**
+     * The name to use when registering with JMX.
+     */
+    var objectName = "com.codahale.logula:type=Logging"
+  }
+
   class LoggingConfig {
     /**
      * Console logging configuration.
@@ -84,6 +91,11 @@ object Logging {
      * Syslog logging configuration.
      */
     val syslog = new LoggingSyslogConfig
+
+    /**
+     * Customize how logging appears and behaves in JMX.
+     */
+    val jmx = new JmxConfig
 
     /**
      * A map of logger names to default levels.
@@ -148,14 +160,14 @@ object Logging {
 
     if (config.syslog.enabled) {
       val layout = new PatternLayout("%c: %m")
-      val syslog = new SyslogAppender(layout, "localhost", SyslogAppender.getFacility("local2"))
+      val syslog = new SyslogAppender(layout, "localhost", SyslogAppender.getFacility(config.syslog.facility))
       appender.addAppender(syslog)
     }
 
     if (config.registerWithJMX) {
       try {
         val mbeans = ManagementFactory.getPlatformMBeanServer
-        val name = new ObjectName("com.codahale.logula:type=Logging")
+        val name = new ObjectName(config.jmx.objectName)
         mbeans.registerMBean(LoggingMXBean, name)
       } catch {
         case e: InstanceAlreadyExistsException => // THANKS
