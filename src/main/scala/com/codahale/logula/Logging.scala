@@ -125,6 +125,11 @@ object Logging {
    * Configure Logula.
    */
   def configure(f: LoggingConfig => Any) {
+    if (System.getenv().get("LOGULA_DEBUG") != null) {
+      println("LOGULA_DEBUG: Someone called configure()")
+      (new Throwable).printStackTrace()
+    }
+
     val config = new LoggingConfig
     f(config)
 
