@@ -125,7 +125,8 @@ object Logging {
    * Configure Logula.
    */
   def configure(f: LoggingConfig => Any) {
-    if (System.getenv().get("LOGULA_DEBUG") != null) {
+    // Set LOGULA_DEBUG in the environment to see who is calling configure()
+    if (Option(System.getenv().get("LOGULA_DEBUG")).isDefined) {
       println("LOGULA_DEBUG: Someone called configure()")
       (new Throwable).printStackTrace()
     }
@@ -137,6 +138,22 @@ object Logging {
     root.getLoggerRepository.resetConfiguration()
     root.setLevel(config.level)
 
+    // Allow adding/changing the list of active loggers via an environment variable.
+    // LOGULA_LOGGERS should be this format:
+    //   "com.foo.bar.Logger1=DEBUG,com.foo.bar.baz.Logger=TRACE,..."
+    try {
+      Option(System.getenv().get("LOGULA_LOGGERS")) map { configString =>
+        configString.split(",").foreach { cfg =>
+          val split = cfg.split("=")
+          val logger = split(0)
+          val level = Level.toLevel(split(1))
+          config.loggers += logger -> level
+        }
+      }
+    } catch {
+      case e: Exception => // ignore; too early to do much
+    }
+    
     for ((name, level) <- config.loggers) {
       Logger.getLogger(name).setLevel(level)
     }
