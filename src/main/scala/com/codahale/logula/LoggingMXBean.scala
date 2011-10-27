@@ -19,6 +19,12 @@ trait LoggingMXBean {
    * (If the level name is unknown, INFO is used as a default.)
    */
   def setLoggerLevel(name: String, level: String): String
+
+  /**
+   * Return an array of all loggers and their effective levels.  Each item returned is
+   * a string that looks like "com.foo.MyLogger=DEBUG"
+   */
+  def getActiveLoggers: Array[String]
 }
 
 /**
@@ -35,5 +41,13 @@ object LoggingMXBean extends LoggingMXBean {
   def getLoggerLevel(name: String) = {
     val logger = Logger.getLogger(name)
     logger.getEffectiveLevel.toString
+  }
+
+  def getActiveLoggers: Array[String] = {
+    import scala.collection.JavaConversions._
+    (Logger.getRootLogger.getLoggerRepository.getCurrentLoggers
+      map { _.asInstanceOf[Logger] }
+      map { logger => "%s=%s".format(logger.getName, logger.getEffectiveLevel) }
+    ).toArray
   }
 }
