@@ -46,8 +46,7 @@ object LoggingMXBean extends LoggingMXBean {
   def getActiveLoggers: Array[String] = {
     import scala.collection.JavaConversions._
     (Logger.getRootLogger.getLoggerRepository.getCurrentLoggers
-      map { _.asInstanceOf[Logger] }
-      map { logger => "%s=%s".format(logger.getName, logger.getEffectiveLevel) }
+      collect { case l: Logger => "%s=%s".format(l.getName, l.getEffectiveLevel) }
     ).toArray
   }
 }
